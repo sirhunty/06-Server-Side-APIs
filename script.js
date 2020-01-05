@@ -42,10 +42,46 @@ function getStoredWeatherData() {
     };
   } else {
     return storedWeatherData;
-    
+
   }
 }
 
+// Check local storage for the weather data the user searched for
+function getCurrentWeatherConditions(citySearched) {
+  let queryURL = `https://api.openweathermap.org/data/2.5/weather?q=${citySearched}&units=imperial&appid=${APIKEY}`;
+  let storedWeatherData = getStoredWeatherData();
+  let searchHistory = storedWeatherData.searchHistory;
+  let timeNow = new Date().getTime();
+  citySearched = citySearched.toLowerCase().trim();
+  for (let i = 0; i < searchHistory.length; i++) {
+    if (
+      searchHistory[i].cityName.toLowerCase() == citySearched &&
+      timeNow < searchHistory[i].dt * 1000 + 600000
+    ) {
+      for (let j = 0; j < storedWeatherData.data.currentWeather.length; j++) {
+        if (
+          storedWeatherData.data.currentWeather[j].name.toLowerCase() ==
+          citySearched
+        ) {
+          populateCurrentWeatherConditions(
+            storedWeatherData.data.currentWeather[j]
+          );
+          return;
+        }
+      }
+    }
+  }
+
+  // API call to get current weather if not in the local storage
+  $.ajax({
+    url: queryURL,
+    method: "GET"
+  }).then(function(results) {
+    populateCurrentWeatherConditions(results);
+    storeCurrentWeather(results);
+    console.log(results);
+  });
+}
 
 
 
