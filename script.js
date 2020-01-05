@@ -121,4 +121,75 @@ function populateCurrentWeatherConditions(results) {
   populateUVIndex(lon, lat);
 }
 
+// Locates the UV Index for city in local storage, or API to get the data
+function populateUVIndex(lon, lat) {
+  let UVIndexURL = `https://api.openweathermap.org/data/2.5/uvi?appid=${APIKEY}&lat=${lat}&lon=${lon}`;
+  $.ajax({
+    url: UVIndexURL,
+    method: "GET"
+  }).then(function(results) {
+    let UVIndex = results.value;
+    let currUVLevel = $("#todaysUVIndex").attr("data-uv-level");
+    $("#todaysUVIndex").removeClass(currUVLevel);
+    $("#todaysUVIndex").text(UVIndex);
+    if (UVIndex < 3) {
+      $("#todaysUVIndex").attr("data-uv-level", "uv-low");
+    } else if (UVIndex < 6) {
+      $("#todaysUVIndex").attr("data-uv-level", "uv-mod");
+    } else if (UVIndex < 8) {
+      $("#todaysUVIndex").attr("data-uv-level", "uv-high");
+    } else if (UVIndex < 11) {
+      $("#todaysUVIndex").attr("data-uv-level", "uv-very-high");
+    } else {
+      $("#todaysUVIndex").attr("data-uv-level", "uv-ext");
+    }
+    $("#todaysUVIndex").addClass($("#todaysUVIndex").attr("data-uv-level"));
+  });
+}
+
+
+// Searches local storage for forecast of city, or an API call if not found.
+function getWeeklyForecast(citySearched) {
+  let storedWeatherData = getStoredWeatherData();
+  let forecastURL = `https://api.openweathermap.org/data/2.5/forecast?q=${citySearched}&units=imperial&appid=ace07f609ddfcf658bcba38cc43237a5`;
+  let today = new Date().getDate();
+  for (let i = 0; i < storedWeatherData.searchHistory.length; i++) {
+    let savedDate = new Date(
+      storedWeatherData.searchHistory[i].dt * 1000
+    ).getDate();
+    if (
+      storedWeatherData.searchHistory[i].cityName.toLowerCase() ==
+        citySearched &&
+      savedDate == today
+    ) {
+      for (let j = 0; j < storedWeatherData.data.forecast.length; j++) {
+        if (
+          storedWeatherData.data.forecast[j].city.name.toLowerCase() ==
+          citySearched.toLowerCase()
+        ) {
+          populateForecast(storedWeatherData.data.forecast[j]);
+          return;
+        }
+      }
+    }
+  }
+
+  $.ajax({
+    url: forecastURL,
+    method: "GET"
+  }).then(function(results) {
+    populateForecast(results);
+    storeForecast(results, citySearched);
+  });
+}
+
+
+// Stores the forecast of the city to local storage if not found.
+function storeForecast(results, citySearched) {
+  citySearched = citySearched.toLowerCase().trim();
+  let storedWeatherData = getStoredWeatherData();
+  storedWeatherData.data.forecast.push(results);
+  localStorage.setItem("storedWeatherData", JSON.stringify(storedWeatherData));
+}
+
 
