@@ -29,4 +29,23 @@ function searchHistory() {
       });
     }
   }
+// Populates the user's last searches or returns empy if no data
+function getStoredWeatherData() {
+  let storedWeatherData = JSON.parse(localStorage.getItem("storedWeatherData"));
+  if (!storedWeatherData) {
+    return {
+      searchHistory: [],
+      data: {
+        currentWeather: [],
+        forecast: []
+      }
+    };
+  } else {
+    return storedWeatherData;
+    
+  }
+}
+
+
+
 
