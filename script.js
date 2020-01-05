@@ -83,5 +83,42 @@ function getCurrentWeatherConditions(citySearched) {
   });
 }
 
+// Stores the current weather data from the API call.
+function storeCurrentWeather(results) {
+  let storedWeatherData = getStoredWeatherData();
+  let searchHistoryEntry = {
+    cityName: results.name,
+    dt: results.dt
+  };
+  storedWeatherData.searchHistory.push(searchHistoryEntry);
+  storedWeatherData.data.currentWeather.push(results);
+  localStorage.setItem("storedWeatherData", JSON.stringify(storedWeatherData));
+}
+
+// Retrival of the current weather data from storage or the API call
+function populateCurrentWeatherConditions(results) {
+  let cityName = results.name;
+  let date = new Date(results.dt * 1000);
+  let description = results.weather[0].main;
+  let humidity = results.main.humidity;
+  let iconURL = `https://openweathermap.org/img/w/${results.weather[0].icon}.png`;
+  let temp = results.main.temp;
+  let windSpeed = results.wind.speed;
+  let lon = results.coord.lon;
+  let lat = results.coord.lat;
+
+// Adds data to the html/page
+  $("#currentCity").text(cityName);
+  $("#todaysDate").text(
+    `(${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()})`
+  );
+  $("#currentWeatherIcon").attr("src", iconURL);
+  $("#currentWeatherIcon").attr("alt", description + " icon");
+  $("#todaysTemp").text(temp);
+  $("#todaysHumidity").text(humidity);
+  $("#todaysWindSpeed").text(windSpeed);
+
+  populateUVIndex(lon, lat);
+}
 
 
